@@ -1,8 +1,7 @@
 # BEP: The Effect of Soil Moisture on GPR Signal Response
 
 **Author:** Julian van der Kuil  
-**Supervisor:** Dominique Ngan-Tillard  
-**Institution:** TU Delft — Geoscience & Remote Sensing  
+
 **Date:** 2026
 
 ## Repository Structure
