@@ -27,8 +27,6 @@
 │   ├── precipitation_analysis.py       # KNMI precipitation data analysis
 │   ├── groundwater_analysis.py         # BRO groundwater level analysis
 │   ├── soil_moisture_calculations.py   # Oven drying gravimetric water content
-│   ├── warr_velocity_analysis.py       # WARR velocity, permittivity, Topp equation
-│   └── origin_offset_calculation.py    # Survey grid origin offset (trilateration)
 │
 └── README.md
 ```
