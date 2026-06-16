@@ -1,0 +1,36 @@
+## GPRMax B-scan - Run 3 revised: Homogeneous wet soil (no fractal)
+## 500 MHz | gprMax v3.1.7
+## Uniform wet soil: er = 14.06 (theta = 26.1%, v = 0.08 m/ns)
+## Used for clean difference plot comparison with Run 4
+
+#domain: 4.2 1.25 0.002
+#dx_dy_dz: 0.002 0.002 0.002
+#time_window: 4.028e-8
+
+## Waveform & antenna
+#waveform: ricker 1 500000000 my_ricker
+#hertzian_dipole: z 0.10 1.23 0.001 my_ricker
+#rx: 0.102 1.23 0.001
+#src_steps: 0.02 0 0
+#rx_steps: 0.02 0 0
+
+## Materials
+## Wet soil: er = 14.06, sigma = 0.05 (moist sandy soil)
+#material: 14.06 0.05 1.0 0.0 wet_soil
+#material: 3.0 0.001 1.0 0.0 pvc
+#material: 81.0 0.01 1.0 0.0 water
+
+## Geometry
+## Uniform wet soil - no fractal
+#box: 0 0 0 4.2 1.2 0.002 wet_soil
+#box: 0 1.2 0 4.2 1.25 0.002 free_space
+
+## Buried objects at 60cm depth
+#cylinder: 0.80 0.60 0 0.80 0.60 0.002 0.04 pec
+#box: 1.85 0.59 0 2.15 0.61 0.002 pvc
+#cylinder: 2.0 0.60 0 2.0 0.60 0.002 0.005 pec
+#cylinder: 3.10 0.60 0 3.10 0.60 0.002 0.06 water
+
+#title: Run3_Homogeneous_Wet
+#num_threads: 4
+#geometry_view: 0 0 0 4.2 1.25 0.002 0.002 0.002 0.002 geometry_run3_hom_wet n

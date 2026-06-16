@@ -1,0 +1,45 @@
+## GPRMax B-scan - Heterogeneous dry soil - fractal moisture theta=0.01-0.10
+## 500 MHz | gprMax v3.1.7
+##
+#domain: 4.2 1.25 0.002
+#dx_dy_dz: 0.002 0.002 0.002
+#time_window: 4.028e-08
+##
+## --- Waveform & antenna ---
+#waveform: ricker 1 500000000 my_ricker
+#hertzian_dipole: z 0.1 1.23 0.001 my_ricker
+#rx: 0.10200000000000001 1.23 0.001
+#src_steps: 0.02 0 0
+#rx_steps: 0.02 0 0
+##
+## --- Peplinski soil model (sandy clay) ---
+#soil_peplinski: 0.5 0.5 2.0 2.66 0.01 0.1 my_soil
+##
+## --- Materials ---
+#material: 3.0 0.001 1.0 0.0 pvc
+#material: 81.0 0.01 1.0 0.0 water
+##
+## --- Geometry ---
+## Soil: fractal_box (water_min=water_max gives homogeneous soil for Run 1)
+#fractal_box: 0 0 0 4.2 1.2 0.002 1.5 1 1 1 50 my_soil my_soil_box
+##
+## Air gap above soil surface
+#box: 0 1.2 0 4.2 1.25 0.002 free_space
+##
+## --- Buried objects ---
+## Power cable - PEC cylinder, r=0.04m, x=0.8m, depth=0.6m
+#cylinder: 0.8 0.6 0 0.8 0.6 0.002 0.04 pec
+##
+## PVC sheet, x=1.85-2.15m, depth=0.6m
+#box: 1.85 0.59 0 2.15 0.61 0.002 pvc
+##
+## Fibre optic cable - PEC cylinder, r=0.005m, below PVC sheet
+#cylinder: 2.0 0.6 0 2.0 0.6 0.002 0.005 pec
+##
+## Water pipe - water cylinder, r=0.06m, x=3.1m, depth=0.6m
+#cylinder: 3.1 0.6 0 3.1 0.6 0.002 0.06 water
+##
+#title: Run2_Heterogeneous_Dry
+#num_threads: 4
+##
+#geometry_view: 0 0 0 4.2 1.25 0.002 0.002 0.002 0.002 subsurface_geometry_run2_heterogeneous_dry n
