@@ -73,7 +73,7 @@ def plot_bscan(filepath, velocity=0.08, max_depth=1.2, dx=0.02,
     extent = [pos_ax[0], pos_ax[-1], depth_ax[-1], depth_ax[0]]
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.imshow(data_plot, aspect='auto', cmap='gray',
+    ax.imshow(data_plot, aspect='auto', cmap='seismic',
               vmin=-vmax, vmax=vmax, extent=extent)
     ax.set_xlabel('Position (m)', fontsize=12)
     ax.set_ylabel('Depth (m)', fontsize=12)
