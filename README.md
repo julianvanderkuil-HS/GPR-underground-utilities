@@ -21,7 +21,8 @@
 │   ├── plot_bscan.py                   # Plot GPRmax B-scan radargrams
 │   ├── plot_geometry_pyvista.py        # Plot GPRmax geometry using PyVista
 │   ├── plot_geometry_matplotlib.py     # Schematic cross-section figure
-│   └── plot_difference.py             # Difference plot: Run 3 vs Run 4
+│   └── plot_difference.py              # Difference plot: Run 3 vs Run 4
+|   └── Soil size distibution plot.py   # Plot showing particle size distribution curve
 │
 ├── analysis/
 │   ├── precipitation_analysis.py       # KNMI precipitation data analysis
