@@ -27,6 +27,12 @@
 ├── analysis/
 │   ├── precipitation_analysis.py       # KNMI precipitation data analysis
 │   ├── groundwater_analysis.py         # BRO groundwater level analysis
+├── animations/
+|
+│   ├──    3DPreviewdry-crop.gif            #3D slice view 0.8 metred dry measurment
+│   ├──    3DPreviewwet-crop.gif            #3D slice view 0.8 metres Wet meausrment
+|   ├──    gpr_wet_survey_utility_lines.gif  # Indivdual radargrams animated wet survey
+|   ├──    GPR_LINES_SURVEY1.gif            # Indvidual radargrams anmiated dry survey
 │
 └── README.md
 ```
