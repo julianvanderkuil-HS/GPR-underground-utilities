@@ -1,112 +1,96 @@
-"""
-Plot GPRmax B-scan Radargram (Processed)
-=========================================
-Loads a merged GPRmax .out file and plots the B-scan with
-normalisation and time-varying gain (TVG) applied.
-
-Usage:
-    python plot_bscan.py <filename.out> [--velocity 0.08] [--max_depth 1.2]
-
-Author: Julian van der Kuil - BEP TU Delft
-"""
-
-import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-import argparse
+import h5py
 import os
 
-
-def load_bscan(filepath, component='Ez'):
-    """Load B-scan from GPRmax merged .out file."""
-    with h5py.File(filepath, 'r') as f:
-        data = f['rxs/rx1'][component][:]
-        dt = f.attrs.get('dt', 2e-11)
-    dt_ns = dt * 1e9
-    print(f"Loaded {filepath}: shape={data.shape}, dt={dt_ns:.4f} ns")
-    return data, dt_ns
+MERGED_FILE = '/content/run4_heterogeneous_wet_dry_under_pvc_merged.out'
 
 
-def normalise_traces(data):
-    """Normalise each trace independently by its maximum absolute value."""
-    out = np.zeros_like(data, dtype=float)
-    for i in range(data.shape[1]):
-        mx = np.max(np.abs(data[:, i]))
-        if mx > 0:
-            out[:, i] = data[:, i] / mx
-    return out
+# Field component to plot (Ez is the z-polarised field we transmitted)
+FIELD_COMP  = "Ez"
 
+# Clip percentile for colour scale (lower = more contrast on weak signals)
+# Try values between 90 and 99. Start with 95.
+CLIP_PERCENTILE = 95
 
-def apply_tvg(data, power=2.0):
-    """Apply time-varying gain to boost deeper reflections for display."""
-    n_time = data.shape[0]
-    t = np.linspace(0.1, 1, n_time) ** power
-    gain = np.outer(t, np.ones(data.shape[1]))
-    return data * gain
+# Time-varying gain: raises signal amplitude by t^GAIN_POWER
+# 0 = no gain, 1 = linear, 2 = strong boost for deep targets
+GAIN_POWER = 1.5
 
+# Output image filename
+OUTPUT_IMG = "bscan_processed.png"
 
-def plot_bscan(filepath, velocity=0.08, max_depth=1.2, dx=0.02,
-               tvg_power=2.0, output_file=None):
-    """Plot a processed GPRmax B-scan radargram."""
+# Antenna step size (m) — used to label x-axis in metres
+TRACE_STEP  = 0.011      # m per trace
+X_START     = 0.5        # m starting position
 
-    # Load data
-    data, dt_ns = load_bscan(filepath)
+# =============================================================================
+# LOAD DATA
+# =============================================================================
 
-    # Depth and position axes
-    n_time, n_traces = data.shape
-    depth_ax = np.arange(n_time) * dt_ns * velocity / 2
-    pos_ax = np.arange(n_traces) * dx
+print(f"Loading {MERGED_FILE} ...")
 
-    # Clip to max depth
-    mask = depth_ax <= max_depth
-    depth_ax = depth_ax[mask]
+with h5py.File(MERGED_FILE, "r") as f:
+    # Print available fields so you can check if Ez exists
+    rx_path = "rxs/rx1/"
+    available = list(f[rx_path].keys())
+    print(f"  Available field components: {available}")
 
-    # Process: normalise then apply TVG
-    data_norm = normalise_traces(data)
-    data_tvg = apply_tvg(data_norm, tvg_power)
-    data_plot = data_tvg[mask, :]
+    if FIELD_COMP not in available:
+        FIELD_COMP = available[0]
+        print(f"  '{FIELD_COMP}' not found, using '{FIELD_COMP}' instead")
 
-    # Colour scale: skip first 20 samples to suppress direct wave
-    vmax = np.percentile(np.abs(data_plot[20:, :]), 95)
+    data = f[rx_path + FIELD_COMP][:]          # shape: (n_samples, n_traces)
+    dt   = f.attrs["dt"]                        # time step in seconds
+    n_samples, n_traces = data.shape
+    print(f"  Shape: {n_samples} samples x {n_traces} traces")
+    print(f"  Time step: {dt*1e12:.2f} ps")
 
-    # Plot
-    extent = [pos_ax[0], pos_ax[-1], depth_ax[-1], depth_ax[0]]
+# =============================================================================
+# PROCESSING
+# =============================================================================
 
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.imshow(data_plot, aspect='auto', cmap='seismic',
-              vmin=-vmax, vmax=vmax, extent=extent)
-    ax.set_xlabel('Position (m)', fontsize=12)
-    ax.set_ylabel('Depth (m)', fontsize=12)
-    ax.set_ylim(max_depth, 0)
+# 1) Background removal — subtract mean trace (removes direct wave)
+print("Applying background subtraction ...")
+data_proc = data - data.mean(axis=1, keepdims=True)
 
-    title = os.path.basename(filepath).replace('.out', '').replace('_', ' ').title()
-    ax.set_title(f'GPRmax B-scan: {title}\n'
-                 f'v = {velocity} m/ns | Normalised + TVG',
-                 fontsize=12)
+# 2) Time-varying gain — amplify later (deeper) arrivals
+print(f"Applying TVG (power={GAIN_POWER}) ...")
+t = np.arange(n_samples) * dt
+gain = (t / t.max()) ** GAIN_POWER
+gain[0] = 0   # avoid division issues at t=0
+data_proc = data_proc * gain[:, np.newaxis]
 
-    plt.tight_layout()
+# 3) Clip colour scale to bring out weak reflections
+clip_val = np.percentile(np.abs(data_proc), CLIP_PERCENTILE)
+print(f"  Colour clip value: ±{clip_val:.2f} V/m  ({CLIP_PERCENTILE}th percentile)")
 
-    if output_file is None:
-        output_file = filepath.replace('.out', '_bscan.png')
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    plt.show()
-    print(f"Saved: {output_file}")
+# =============================================================================
+# PLOT
+# =============================================================================
 
+print("Plotting ...")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Plot GPRmax B-scan radargram')
-    parser.add_argument('filename', help='Path to merged .out file')
-    parser.add_argument('--velocity', type=float, default=0.08,
-                        help='Signal velocity in m/ns (default: 0.08)')
-    parser.add_argument('--max_depth', type=float, default=1.2,
-                        help='Maximum depth to display in metres (default: 1.2)')
-    parser.add_argument('--dx', type=float, default=0.02,
-                        help='Trace spacing in metres (default: 0.02)')
-    parser.add_argument('--tvg_power', type=float, default=2.0,
-                        help='TVG gain power (default: 2.0)')
-    parser.add_argument('--output', type=str, default=None,
-                        help='Output filename (default: <input>_bscan.png)')
-    args = parser.parse_args()
+# Axis arrays
+time_axis = np.arange(n_samples) * dt * 1e9   # convert to ns
+x_axis    = X_START + np.arange(n_traces) * TRACE_STEP
 
-    plot_bscan(args.filename, args.velocity, args.max_depth,
-               args.dx, args.tvg_power, args.output)
+fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+
+# Processed plot
+im2 = ax.imshow(data_proc,
+                aspect="auto",
+                extent=[x_axis[0], x_axis[-1], time_axis[-1], time_axis[0]],
+                cmap="seismic",
+                vmin=-clip_val,
+                vmax= clip_val)
+plt.colorbar(im2, ax=ax, label="Field strength [V/m]  (gained)")
+ax.set_title(f"Processed: background removed + TVG (power={GAIN_POWER})")
+ax.set_xlabel("Distance [m]")
+ax.set_ylabel("Two-way travel time [ns]")
+
+plt.suptitle("GPRMax 500 MHz B-scan — Sandy clay heterogeneous wet, dry under sheet", fontsize=13)
+plt.tight_layout()
+plt.savefig(OUTPUT_IMG, dpi=150, bbox_inches="tight")
+print(f"\nSaved: {OUTPUT_IMG}")
+plt.show()
